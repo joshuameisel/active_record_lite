@@ -57,9 +57,26 @@ class SQLObject < MassObject
   def attributes
     @attributes ||= {}
   end
+  
+  def update
+    set_string = ""
+    attributes.each do |col, val|
+      value_str = val.is_a?(String) ? "'#{val}'" : "#{val}"
+      set_string.concat("#{col.to_s}=#{value_str},")
+    end
+    set_string.chop!
+    puts "whoa!"
+    
+    DBConnection.execute(
+      "UPDATE #{self.class.table_name} " +
+      "SET #{set_string} " +
+      "WHERE id=#{self.id}"
+    )
+  end
 
   def insert
-    column_string = "(id"
+    attributes[:id] = self.class.all.last.id + 1
+    column_string = "("
     value_string = "("
     self.class.columns.each do |col|
       next if col == :id
@@ -92,11 +109,7 @@ class SQLObject < MassObject
   end
 
   def save
-    # ...
-  end
-
-  def update
-    # ...
+    self.id == nil ? self.insert : self.update
   end
 
   def attribute_values
