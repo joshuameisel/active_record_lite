@@ -31,6 +31,8 @@ class BelongsToOptions < AssocOptions
 end
 
 class HasManyOptions < AssocOptions
+  attr_reader :class_name, :primary_key, :foreign_key
+  
   def initialize(name, self_class_name, options = {})
     options.each do |option, value|
       instance_variable_set("@" + option.to_s, value)
@@ -45,21 +47,26 @@ end
 module Associatable
   # Phase IVb
   def belongs_to(name, options = {})
-    instance_variable.set("@" + name.to_s, BelongsToOptions.new(name, options))
-    has_many_options = instance_variable.get("@" + name.to_s)
+    options = BelongsToOptions.new(name, options)
+    foreign_key = options.foreign_key.to_sym
+    
     define_method(name) do
-      DBConnection.execute([<<-SQL, 
-      SELECT 
-        * 
-      FROM 
-        ?
-      WHERE
-        ?=?
-      SQL
+      options
+      .model_class
+      .where(options.primary_key => self.send(foreign_key))
+      .first
+    end
   end
 
   def has_many(name, options = {})
-    # ...
+    options = HasManyOptions.new(name, self.to_s, options)
+    primary_key = options.primary_key.to_sym
+    
+    define_method(name) do
+      options
+      .model_class
+      .where(options.foreign_key => self.send(primary_key))
+    end
   end
 
   def assoc_options
@@ -68,5 +75,5 @@ module Associatable
 end
 
 class SQLObject
-  include Associatable
+  extend Associatable
 end
