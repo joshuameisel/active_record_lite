@@ -26,7 +26,7 @@ class BelongsToOptions < AssocOptions
     
     @class_name  ||= name.to_s.camelcase
     @primary_key ||= :id
-    @foreign_key ||= "#{name.to_s}_id".to_sym
+    @foreign_key ||= "#{name}_id".to_sym
   end
 end
 
@@ -40,7 +40,7 @@ class HasManyOptions < AssocOptions
     
     @class_name  ||= name.to_s.singularize.camelcase
     @primary_key ||= :id
-    @foreign_key ||= "#{self_class_name.downcase}_id".to_sym
+    @foreign_key ||= "#{self_class_name.underscore}_id".to_sym
   end
 end
 
@@ -49,6 +49,7 @@ module Associatable
   def belongs_to(name, options = {})
     options = BelongsToOptions.new(name, options)
     foreign_key = options.foreign_key.to_sym
+    self.assoc_options[name] = options
     
     define_method(name) do
       options
@@ -70,7 +71,7 @@ module Associatable
   end
 
   def assoc_options
-    # Wait to implement this in Phase V. Modify `belongs_to`, too.
+    @assoc_options ||= {}
   end
 end
 
