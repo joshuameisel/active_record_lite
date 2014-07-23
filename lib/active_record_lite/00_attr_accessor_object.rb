@@ -4,7 +4,7 @@ class AttrAccessorObject
       define_method(name) do
         self.instance_variable_get("@" + name.to_s)
       end
-      
+
       define_method(name.to_s + "=") do |val|
         self.instance_variable_set("@" + name.to_s, val)
       end

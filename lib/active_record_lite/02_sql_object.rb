@@ -1,5 +1,4 @@
 require_relative 'db_connection'
-require_relative '01_mass_object'
 require 'active_support/inflector'
 
 class MassObject
@@ -10,7 +9,7 @@ class MassObject
   end
 end
 
-class SQLObject < MassObject 
+class SQLObject < MassObject
   def self.table_name=(table_name)
     @table_name = table_name
   end
@@ -18,10 +17,10 @@ class SQLObject < MassObject
   def self.table_name
     @table_name ||= self.to_s.tableize
   end
-  
+
   def self.columns
     return @columns if @columns
-    
+
     @columns = DBConnection.execute2("SELECT * FROM " + self.table_name)
       .first
       .map(&:to_sym)
@@ -34,21 +33,21 @@ class SQLObject < MassObject
         attributes[col] = val
       end
     end
-    
+
     @columns
   end
-  
+
   def self.all
     @all if @all
     @all = self.parse_all(
-    DBConnection.execute("SELECT * FROM " + self.table_name)
+      DBConnection.execute("SELECT * FROM " + self.table_name)
     )
   end
 
   def self.find(id)
     self.parse_all(
       DBConnection.execute(
-        "SELECT * FROM " + self.table_name + 
+        "SELECT * FROM " + self.table_name +
         " WHERE id = " + id.to_s
       )
     ).first
@@ -57,7 +56,7 @@ class SQLObject < MassObject
   def attributes
     @attributes ||= {}
   end
-  
+
   def update
     set_string = ""
     attributes.each do |col, val|
@@ -66,7 +65,7 @@ class SQLObject < MassObject
     end
     set_string.chop!
     puts "whoa!"
-    
+
     DBConnection.execute(
       "UPDATE #{self.class.table_name} " +
       "SET #{set_string} " +
@@ -87,22 +86,22 @@ class SQLObject < MassObject
       else
         value_str = value.to_s
       end
-      
+
       value_string.concat("#{value_str},")
     end
-    
+
     [column_string, value_string].each {|str| str.chop!.concat(")")}
-    
+
     DBConnection.execute(
       "INSERT INTO #{self.class.table_name} #{column_string} " +
       "VALUES #{value_string}"
     )
   end
 
-  def initialize(params = {})    
+  def initialize(params = {})
     params.each do |attr_name, val|
       unless self.class.columns.include?(attr_name.to_sym)
-        raise "unknown attribute '#{attr_name}'" 
+        raise "unknown attribute '#{attr_name}'"
       end
       attributes[attr_name.to_sym] = val
     end
