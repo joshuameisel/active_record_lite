@@ -38,8 +38,7 @@ class SQLObject < MassObject
   end
 
   def self.all
-    @all if @all
-    @all = self.parse_all(
+    self.parse_all(
       DBConnection.execute("SELECT * FROM " + self.table_name)
     )
   end
@@ -47,8 +46,7 @@ class SQLObject < MassObject
   def self.find(id)
     self.parse_all(
       DBConnection.execute(
-        "SELECT * FROM " + self.table_name +
-        " WHERE id = " + id.to_s
+        "SELECT * FROM " + self.table_name + " WHERE id = " + id.to_s
       )
     ).first
   end
