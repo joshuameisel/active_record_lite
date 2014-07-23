@@ -1,4 +1,4 @@
-require_relative '03_searchable'
+require_relative '02_searchable'
 require 'active_support/inflector'
 
 # Phase IVa
@@ -10,7 +10,7 @@ class AssocOptions
   )
 
   def model_class
-    @class_name.constantize 
+    @class_name.constantize
   end
 
   def table_name
@@ -23,7 +23,7 @@ class BelongsToOptions < AssocOptions
     options.each do |option, value|
       instance_variable_set("@" + option.to_s, value)
     end
-    
+
     @class_name  ||= name.to_s.camelcase
     @primary_key ||= :id
     @foreign_key ||= "#{name}_id".to_sym
@@ -32,12 +32,12 @@ end
 
 class HasManyOptions < AssocOptions
   attr_reader :class_name, :primary_key, :foreign_key
-  
+
   def initialize(name, self_class_name, options = {})
     options.each do |option, value|
       instance_variable_set("@" + option.to_s, value)
     end
-    
+
     @class_name  ||= name.to_s.singularize.camelcase
     @primary_key ||= :id
     @foreign_key ||= "#{self_class_name.underscore}_id".to_sym
@@ -50,7 +50,7 @@ module Associatable
     options = BelongsToOptions.new(name, options)
     foreign_key = options.foreign_key.to_sym
     self.assoc_options[name] = options
-    
+
     define_method(name) do
       options
       .model_class
@@ -62,7 +62,7 @@ module Associatable
   def has_many(name, options = {})
     options = HasManyOptions.new(name, self.to_s, options)
     primary_key = options.primary_key.to_sym
-    
+
     define_method(name) do
       options
       .model_class
