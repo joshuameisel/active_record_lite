@@ -3,9 +3,7 @@ require 'active_support/inflector'
 
 class MassObject
   def self.parse_all(results)
-    results.map do |attributes|
-      self.new(attributes)
-    end
+    results.map { |attributes| self.new(attributes) }
   end
 end
 
@@ -58,11 +56,10 @@ class SQLObject < MassObject
   def update
     set_string = ""
     attributes.each do |col, val|
-      value_str = val.is_a?(String) ? "'#{val}'" : "#{val}"
+      value_str = val.is_a?(String) ? "'#{val}'" : val.to_s
       set_string.concat("#{col.to_s}=#{value_str},")
     end
     set_string.chop!
-    puts "whoa!"
 
     DBConnection.execute(
       "UPDATE #{self.class.table_name} " +
@@ -73,22 +70,19 @@ class SQLObject < MassObject
 
   def insert
     attributes[:id] = self.class.all.last.id + 1
-    column_string = "("
-    value_string = "("
+    column_strs, value_strs = [], []
+
     self.class.columns.each do |col|
       next if col == :id
-      column_string.concat("#{col.to_s},")
-      value = attributes[col]
-      if value.is_a?(String)
-        value_str = "'#{value}'"
-      else
-        value_str = value.to_s
-      end
 
-      value_string.concat("#{value_str},")
+      column_strs << col.to_s
+
+      value = attributes[col]
+      value_strs << (value.is_a?(String) ? "'#{value}'" : value.to_s)
     end
 
-    [column_string, value_string].each {|str| str.chop!.concat(")")}
+    column_string = "(#{column_strs.join(',')})"
+    value_string = "(#{value_strs.join(',')})"
 
     DBConnection.execute(
       "INSERT INTO #{self.class.table_name} #{column_string} " +
@@ -106,12 +100,10 @@ class SQLObject < MassObject
   end
 
   def save
-    self.id == nil ? self.insert : self.update
+    self.id ? self.update : self.insert
   end
 
   def attribute_values
-    [].tap do |values|
-      self.class.columns.each {|col| values << attributes[col]}
-    end
+    return self.class.columns.map { |col| attributes[col] }
   end
 end
