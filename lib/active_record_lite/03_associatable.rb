@@ -1,13 +1,8 @@
 require_relative '02_searchable'
 require 'active_support/inflector'
 
-# Phase IVa
 class AssocOptions
-  attr_accessor(
-    :foreign_key,
-    :class_name,
-    :primary_key
-  )
+  attr_accessor :foreign_key, :class_name, :primary_key
 
   def model_class
     @class_name.constantize
@@ -45,7 +40,6 @@ class HasManyOptions < AssocOptions
 end
 
 module Associatable
-  # Phase IVb
   def belongs_to(name, options = {})
     options = BelongsToOptions.new(name, options)
     foreign_key = options.foreign_key.to_sym
