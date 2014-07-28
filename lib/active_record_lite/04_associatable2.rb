@@ -6,8 +6,8 @@ module Associatable
       through_options = self.class.assoc_options[through_name]
       source_options = through_options.model_class.assoc_options[source_name]
 
-      sql =
-        "SELECT
+      sql = <<-SQL
+        SELECT
           #{source_options.table_name}.*
         FROM
           #{through_options.table_name}
@@ -16,9 +16,11 @@ module Associatable
             #{through_options.table_name}.#{source_options.foreign_key} =
               #{source_options.table_name}.#{source_options.primary_key}
         WHERE
-          #{through_options.table_name}.#{through_options.primary_key} = ?"
-
-      attrs = DBConnection.execute(sql, self.send(through_options.foreign_key)).first
+          #{through_options.table_name}.#{through_options.primary_key} = ?
+        SQL
+      attrs = DBConnection.execute(
+        sql, self.send(through_options.foreign_key)
+      ).first
       source_options.model_class.new(attrs)
     end
   end
